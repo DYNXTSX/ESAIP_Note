@@ -25,16 +25,8 @@ class FrontControlleur
                     $erreur = "Erreur sur le role";
                     break;
 
-                case "visiteur":
-                    $visiteur = new VisiteurControl();
-                    break;
-
-                case "user":
-                    $user = new UserControl();
-                    break;
-
                 default:
-                    echo"le role est ni null, ni admin, ni user";
+                    $visiteur = new VisiteurControl();
                     break;
             }
 

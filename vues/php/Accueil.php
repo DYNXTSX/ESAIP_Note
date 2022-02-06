@@ -43,18 +43,28 @@ if(!isset($_GET['action'])){
                                 <a class="menu-link is-active" href="index.php?action=app&select=allClasse">Toute la Classe</a>
                                 <a class="menu-link" href="index.php?action=app&select=allBetters">Les meilleurs</a>
                                 <a class="menu-link" href="index.php?action=app&select=customTest">Classement</a>
+                                <a class="menu-link" href="index.php?action=app&select=moyenneG">Général</a>
                              ';
                     }elseif ($_GET['select'] == "allBetters"){
                         echo '
                                 <a class="menu-link" href="index.php?action=app&select=allClasse">Toute la Classe</a>
                                 <a class="menu-link is-active" href="index.php?action=app&select=allBetters">Les meilleurs</a>
                                 <a class="menu-link" href="index.php?action=app&select=customTest">Classement</a>
+                                <a class="menu-link" href="index.php?action=app&select=moyenneG">Général</a>
                              ';
                     }elseif ($_GET['select'] == "customTest"){
                         echo '
                                 <a class="menu-link" href="index.php?action=app&select=allClasse">Toute la Classe</a>
                                 <a class="menu-link" href="index.php?action=app&select=allBetters">Les meilleurs</a>
                                 <a class="menu-link is-active" href="index.php?action=app&select=customTest">Classement</a>
+                                <a class="menu-link" href="index.php?action=app&select=moyenneG">Général</a>
+                             ';
+                    }elseif ($_GET['select'] == "moyenneG"){
+                        echo '
+                                <a class="menu-link" href="index.php?action=app&select=allClasse">Toute la Classe</a>
+                                <a class="menu-link" href="index.php?action=app&select=allBetters">Les meilleurs</a>
+                                <a class="menu-link" href="index.php?action=app&select=customTest">Classement</a>
+                                <a class="menu-link is-active" href="index.php?action=app&select=moyenneG">Général</a>
                              ';
                     }
                 }else{
@@ -62,14 +72,12 @@ if(!isset($_GET['action'])){
                         <a class="menu-link is-active" href="index.php?action=app&select=allClasse">Toute la Classe</a>
                         <a class="menu-link" href="index.php?action=app&select=allBetters">Les meilleurs</a>
                         <a class="menu-link" href="index.php?action=app&select=customTest">Classement</a>
+                        <a class="menu-link" href="index.php?action=app&select=moyenneG">Général</a>
                     ';
                 }
 
 
                 ?>
-            </div>
-            <div class="search-bar">
-                <input type="text" placeholder="Search">
             </div>
             <div class="header-profile">
                 <a href="#" class="notification">
@@ -149,6 +157,7 @@ if(!isset($_GET['action'])){
                 <div class="content-wrapper">
                     <?php
                         $notes = new NoteModele();
+                        $ues = new UeModele();
 
                     if($_GET['select'] == "allClasse"){
                         foreach ($Liste_Etus as $e){
@@ -197,15 +206,115 @@ if(!isset($_GET['action'])){
                                                 </div>
                                                 <span class="status">
                                                 <span class="status-circle green"></span>
-                                                '.$noteMax.'</span>
+                                                '.round($noteMax, 2).'</span>
                                         </li>
                                         </ul>
                                 </div>
                             ';
 
                         }
-                    }
+                    }elseif ($_GET['select'] == "customTest"){
+                        foreach ($Liste_Mat as $m){
+                            $moyennes = [];
+                            $users = [];
+                            $Tableau_Tout = [];
+                            echo '
+                                <div class="content-section">
+                                <div class="content-section-title">'.$m->getNom().'</div>
+                                <ul>
+                            ';
+                            //stocker toutes les notes et users
+                            foreach ($Liste_Etus as $e){
+                                $moyenne = $notes->getMoyenneForOneMat($e->getIdEtu(),$m->getIdMat());
+                                $Tableau_Tout[] = ['note' => $moyenne, 'eleve' => $e];
+                            }
 
+                            usort($Tableau_Tout, 'Validation::DescSort');
+
+                            $position = 1;
+                            foreach ($Tableau_Tout as $t){
+                                echo '
+                                    <li class="adobe-product">
+                                    <div class="products">
+                                    '.$position.' - '.$t['eleve']->getNomComplet().'
+                                    </div>
+                                    <span class="status">
+                                    <span class="status-circle green"></span>
+                                    '.round($t['note'], 2).'</span>
+                                    </li>
+                                    ';
+                                $position += 1;
+                            }
+                            echo '
+                                </ul>
+                                </div>
+                            ';
+                        }
+                    }elseif ($_GET['select'] == "moyenneG"){
+
+                        $Liste_Ues = $ues->getAllUe();
+                        $Tableau_Tout_General = [];
+
+
+                        foreach ($Liste_Etus as $e){
+                            $moyenneG = 0;
+                            $coefG = 0;
+                            foreach ($Liste_Ues as $ue){
+                                $Liste_Matiere_Ue = $matieres->getMatieresByUe($ue->getId());
+                                $moyenne = 0;
+                                $coef = 0;
+                                foreach ($Liste_Matiere_Ue as $matUe){
+                                    $moyenne += ($notes->getMoyenneForOneMat($e->getIdEtu(),$matUe->getIdMat()) * $matUe->getCoef());
+                                    $coef += $matUe->getCoef();
+
+                                }
+                                $moyenneG += $moyenne/$coef;
+                                $coefG += 1;
+                            }
+                            //echo $e->getNomComplet()." - ".$moyenneG/$coefG."<br>";
+                            $Tableau_Tout_General[] = ['note' => $moyenneG/$coefG, 'eleve' => $e];
+                        }
+
+
+                        usort($Tableau_Tout_General, 'Validation::DescSort');
+                        foreach ($Tableau_Tout_General as $t)
+                            //echo $t['eleve']->getNomComplet()." ".$t['note']."<br>";
+
+                        $pos = 1;
+                        echo '
+                                <div class="content-section">
+                                <div class="content-section-title">Classement Général</div>
+                                <ul>
+                            ';
+                        foreach ($Tableau_Tout_General as $t){
+                            echo '
+                                    <li class="adobe-product">
+                                    <div class="products">
+                                    '.$pos.' - '.$t['eleve']->getNomComplet().'
+                                    </div>
+                                    <span class="status">
+                                    <span class="status-circle green"></span>
+                                    '.round($t['note'],2).'</span>
+                                    </li>
+                            ';
+                            $pos += 1;
+                        }
+
+                        echo '
+                                </ul>
+                                </div>
+                            ';
+
+
+
+                        /*
+                        foreach ($Liste_Mat as $m){
+                            $Liste_Note = $notes->getMoyenneForOneMat(24, $m->getIdMat());
+                            $moyenne += $Liste_Note*$m->getCoef();
+                            $coef += $m->getCoef();
+                            echo $m->getNom()." ".$Liste_Note." ".$m->getIdUe()."<br>";
+                        }*/
+                    }
 
                     ?>
 

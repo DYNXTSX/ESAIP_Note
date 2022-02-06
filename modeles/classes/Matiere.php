@@ -25,6 +25,14 @@ class Matiere
     }
 
     /**
+     * @return float
+     */
+    public function getCoef(): float
+    {
+        return $this->coef;
+    }
+
+    /**
      * @return int
      */
     public function getIdMat(): int
@@ -38,5 +46,13 @@ class Matiere
     public function getCode(): int
     {
         return $this->code;
+    }
+
+    /**
+     * @return int
+     */
+    public function getIdUe(): int
+    {
+        return $this->id_ue;
     }
 }

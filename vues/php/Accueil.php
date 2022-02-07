@@ -156,10 +156,11 @@ if(!isset($_GET['action'])){
 
                 <div class="content-wrapper">
                     <?php
-                        $notes = new NoteModele();
+                    error_reporting(0);
+                    $notes = new NoteModele();
                         $ues = new UeModele();
 
-                    if($_GET['select'] == "allClasse"){
+                    if($_GET['select'] == "allClasse" || !isset($_GET['select'])){
                         foreach ($Liste_Etus as $e){
                             echo '
                                         <div class="content-section">

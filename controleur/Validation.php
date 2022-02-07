@@ -21,6 +21,83 @@ class Validation
         return $string;
     }
 
+    static function DescSort($item1,$item2)
+    {
+        if ($item1['note'] == $item2['note']) return 0;
+        return ($item1['note'] < $item2['note']) ? 1 : -1;
+    }
+
+    static function GetAllNotes($codeUser, $codeMatiere, $key){
+        $urlBase = "https://esaip.alcuin.com/OPDotNet/ePlug/FPC/Process/Annuaire/Parcours/pDetailEvaluations.aspx?idProcessDip=-1&idProcessPer=31294&idProcess=$codeMatiere&idUser=$codeUser&idIns=440107&typeRef=module";
+
+        $opts = [
+            "http" => [
+                "method" => "GET",
+                "header" => "Content-Type: text/xml\r\n".
+                    "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.87 Safari/537.36\r\n".
+                    "Accept: */*\r\n".
+                    "Sec-GPC: 1\r\n".
+                    "Sec-Fetch-Site: none\r\n".
+                    "Sec-Fetch-Mode: cors\r\n".
+                    "Sec-Fetch-Dest: empty\r\n".
+                    "Accept-Encoding: gzip, deflate, br\r\n".
+                    "Accept-Language: fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7\r\n".
+                    $key,
+
+            ]
+        ];
+
+        $context = stream_context_create($opts);
+        $html = file_get_contents($urlBase, false, $context);
+        $body = strip_tags($html, ['td', 'tr', 'table']);
+
+        //getNotes
+        preg_match_all('/(5px;">)([0-9]*\,?[0-9]*)(<\/td>)/',
+            $body,
+            $out, PREG_PATTERN_ORDER);
+
+        return $out;
+    }
+
+    static function MajAllNotes($key){
+        $etudiants = new EtudiantModele();
+        $matieres = new MatiereModele();
+        $notes = new NoteModele();
+
+        $notes->removeAllNotes();
+
+        $Liste_Etudiants = $etudiants->getAllEtudiants();
+        $Liste_Matieres = $matieres->getAllMatieresDispo();
+        foreach ($Liste_Matieres as $m){
+            foreach ($Liste_Etudiants as $e){
+                $out = Validation::GetAllNotes($e->getCode(), $m->getCode(), $key);
+
+                if (array_key_exists(1, $out[2]))
+                    for ($i=0; $i < count($out[2]); $i+=2) {
+                        $coef = floatval(str_replace(',', '.', str_replace('.', '', $out[2][$i])));
+                        $note = floatval(str_replace(',', '.', str_replace('.', '', $out[2][$i+1])));
+
+                        $note = new Note(
+                            $note,
+                            $coef,
+                            $m->getIdMat(),
+                            $e->getIdEtu()
+                        );
+                        $notes->addNote($note);
+                    }
+                else{
+                    $note = new Note(
+                        0,
+                        0,
+                        $m->getIdMat(),
+                        $e->getIdEtu()
+                    );
+                    $notes->addNote($note);
+                }
+            }
+        }
+    }
+
     /**
      * Nettoyer_int() :
      *

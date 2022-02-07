@@ -6,6 +6,8 @@ if(!isset($_GET['action'])){
     echo("bonronbr");
 }
 
+$var_Key = "cle a mettre";
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -159,7 +161,6 @@ if(!isset($_GET['action'])){
                     error_reporting(0);
                     $notes = new NoteModele();
                         $ues = new UeModele();
-
                     if($_GET['select'] == "allClasse" || !isset($_GET['select'])){
                         foreach ($Liste_Etus as $e){
                             echo '
